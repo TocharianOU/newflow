@@ -1,6 +1,6 @@
 {
-  "name": "newflow-beta",
-  "version": "1.0.5",
+  "name": "newflow",
+  "version": "1.0.1",
   "private": true,
   "engines": {
     "node": ">=22.16",
