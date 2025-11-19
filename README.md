@@ -147,11 +147,11 @@ NewFlow is a community-driven project. We welcome contributions from developers 
 - **Docker Images**: Available on Docker Hub
 - **Community Support**: GitHub Discussions
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 NewFlow is built upon the excellent foundation of [n8n](https://github.com/n8n-io/n8n). We maintain full compatibility with n8n workflows while adding community-requested AI and automation enhancements.
 
 ---
 
-**Built with ❤️ by the NewFlow Community**
+**Built by the NewFlow Community**
 
