@@ -147,11 +147,11 @@ NewFlow 是一个社区驱动的项目。我们欢迎来自全球开发者的贡
 - **Docker 镜像**：在 Docker Hub 上可用
 - **社区支持**：GitHub Discussions
 
-## 🙏 致谢
+##  致谢
 
 NewFlow 基于优秀的 [n8n](https://github.com/n8n-io/n8n) 基础构建。我们保持与 n8n 工作流的完全兼容性，同时添加社区请求的 AI 和自动化增强功能。
 
 ---
 
-**由 NewFlow 社区用 ❤️ 构建**
+**由 NewFlow 社区构建**
 
