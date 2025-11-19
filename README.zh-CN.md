@@ -61,7 +61,7 @@ docker run -d \
   --name newflow \
   -p 5678:5678 \
   -v ~/.newflow:/home/node/.newflow \
-  newflow/newflow:latest
+  ozlan/newflow:latest
 ```
 
 在 `http://localhost:5678` 访问 NewFlow
@@ -70,7 +70,7 @@ docker run -d \
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/newflow.git
+git clone https://github.com/TocharianOU/newflow.git
 cd newflow
 
 # 使用 Docker Compose 启动

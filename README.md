@@ -61,7 +61,7 @@ docker run -d \
   --name newflow \
   -p 5678:5678 \
   -v ~/.newflow:/home/node/.newflow \
-  newflow/newflow:latest
+  ozlan/newflow:latest
 ```
 
 Access NewFlow at `http://localhost:5678`
@@ -70,7 +70,7 @@ Access NewFlow at `http://localhost:5678`
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/newflow.git
+git clone https://github.com/TocharianOU/newflow.git
 cd newflow
 
 # Start with Docker Compose

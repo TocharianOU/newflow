@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   newflow:
-    image: newflow:1.0.12
+    image: ozlan/newflow:latest
     container_name: newflow
     restart: unless-stopped
     ports:

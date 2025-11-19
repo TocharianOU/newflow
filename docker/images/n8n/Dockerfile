@@ -69,7 +69,10 @@ USER node
 ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="newflow" \
-      org.opencontainers.image.description="NewFlow Workflow Automation Tool" \
+      org.opencontainers.image.description="NewFlow - AI-First Workflow Automation Platform" \
       org.opencontainers.image.source="https://github.com/TocharianOU/newflow" \
-      org.opencontainers.image.url="https://http://newflow.ee/" \
+      org.opencontainers.image.url="https://newflow.ee" \
+      org.opencontainers.image.vendor="NewFlow Community" \
+      org.opencontainers.image.authors="NewFlow Team <team@newflow.ee>" \
+      org.opencontainers.image.licenses="Sustainable Use License" \
       org.opencontainers.image.version=${NEWFLOW_VERSION}
