@@ -1,0 +1,269 @@
+{
+  "name": "ES安全报警智能调查",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "graudframe-ml-alert",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "9d027b2a-f2da-453a-ab83-a0585bc122ce",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -224,
+        32
+      ],
+      "webhookId": "graudframe-ml-alert",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取webhook接收到的完整数据\nconst webhookData = $input.all();\n\n// 提取所有可能的数据源\nlet alertData = {};\n\nfor (const item of webhookData) {\n  // 合并body, query, headers等所有数据\n  alertData = {\n    timestamp: new Date().toISOString(),\n    body: item.json.body || {},\n    query: item.json.query || {},\n    headers: item.json.headers || {},\n    rawData: item.json\n  };\n}\n\n// 格式化为易读的JSON字符串\nconst formattedAlert = JSON.stringify(alertData, null, 2);\n\nreturn [\n  {\n    json: {\n      alertData: alertData,\n      formattedAlert: formattedAlert,\n      timestamp: alertData.timestamp\n    }\n  }\n];"
+      },
+      "id": "5d3faa4e-b83c-4b4e-b9de-0074cb9de1f5",
+      "name": "提取警报数据",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        0,
+        32
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=作为AI辅助助手，你需要对以下安全警报进行初步处理并协助安全团队。\n\n【接收时间】{{ $json.timestamp }}\n【时区说明】来自ES服务器的时区是欧洲时区，接收端时区是北京时区，请在报告中将时间转换为北京时间（原始时间+8小时）\n\n【原始警报数据】\n{{ $json.formattedAlert }}\n\n请你：\n1. 根据警报内容提供一个见解，说明大概发生了什么事情\n2. 给出建议：是否需要安全团队介入\n3. 如果你非常疑惑，可以进行简单调查（不超过2次工具调用）\n4. 尽量不要做太深的介入\n\n请按以下格式输出分析报告：\n\n━━━━━━━━━━━━━━━━━━━━━━━\n安全警报初步分析报告\n━━━━━━━━━━━━━━━━━━━━━━━\n\n【接收时间】(转换为北京时间)\n【告警时间】(转换为北京时间)\n\n【威胁概述】\n简要描述发生了什么，更加体现AI思考的能力（4-5句话）\n\n【关键信息】\n- 受影响主机：\n- 严重程度：\n- 检测规则：\n- 涉及文件：\n- 执行用户：\n- 当前状态：\n- 报警ID\n\n【初步分析】\n- 威胁类型分析\n- 行为特征描述\n- 已观察到的活动\n\n【处置建议】\n✓ 无需介入 / ⚠️ 建议关注 / 🚨 立即介入\n\n理由：\n\n【调查记录】（如有进行简单调查）\n- 查询记录\n- 发现内容\n\n━━━━━━━━━━━━━━━━━━━━━━━\n【报告生成时间】{{ $now.toISO() }}\n【分析引擎】Qwen3\n━━━━━━━━━━━━━━━━━━━━━━━\n\n注意事项：\n✓ 格式要清晰、美观、易读\n✓ 每次调用search时严格定义_source返回的内容\n✓ 调用搜索工具时size从5开始，逐渐提高\n✓ 尽量使用ES聚合来直接获取统计信息",
+        "options": {
+          "systemMessage": "你是安全团队的AI辅助分析师，负责对Elasticsearch安全警报进行初步分析和分类。你的目标是快速判断威胁级别，提供简洁的分析见解，并决定是否需要安全团队深入介入。\n\n【核心工作流程】\n\n步骤1：快速理解警报\n- 阅读原始警报JSON数据\n- 识别关键字段：\n  * kibana.alert.rule.name（规则名称）\n  * kibana.alert.severity（严重程度）\n  * kibana.alert.reason（告警原因）\n  * file.name / file.path（文件信息）\n  * process.name / process.command_line（进程信息）\n  * host.name（受影响主机）\n  * user.name（相关用户）\n  * event.action（事件动作）\n\n步骤2：威胁等级初判\n根据以下因素快速评估：\n- 严重程度：critical > high > medium > low\n- 是否涉及：root用户、恶意文件哈希、异常网络连接\n- 是否为：已知恶意软件签名、文件已隔离\n\n步骤3：决策树\n→ 如果是以下情况，建议\"无需介入\"：\n  * 文件已成功隔离（quarantine_result: true）\n  * 低/中等严重度 + 无异常活动\n  * 误报特征明显（如正常软件更新）\n\n→ 如果是以下情况，建议\"安全团队关注\"：\n  * 高/严重等级但文件已隔离\n  * 涉及root权限操作\n  * 检测到网络连接但数据量小\n\n→ 如果是以下情况，建议\"立即介入\"：\n  * 文件未隔离或隔离失败\n  * 检测到大量数据外传\n  * 涉及横向移动或持久化特征\n  * 多台主机同时告警\n\n步骤4：可选的简单调查\n仅在以下情况进行轻度调查（3-5次工具调用）：\n- 需要确认进程是否仍在运行\n- 需要查看是否有关联网络活动\n- 需要确认影响范围（多台主机）\n\n【Elasticsearch查询规范】\n\n通用原则：\n1. 使用size参数控制返回数量，从5开始逐步增加\n2. 使用_source精确指定需要的字段，避免返回全部内容\n3. 使用bool query组合多个条件\n4. 时间范围用range query限定\n5. 优先使用聚合(aggregations)获取统计信息\n\n查询模板示例：\n\n基础事件搜索：\n{\n  \"index\": \".ds-logs-endpoint.events.*-default-*\",\n  \"queryBody\": {\n    \"size\": 5,\n    \"_source\": [\"@timestamp\", \"host.name\", \"process.name\", \"file.path\", \"user.name\"],\n    \"query\": {\n      \"bool\": {\n        \"must\": [\n          {\"match\": {\"file.name\": \"目标文件名\"}}\n        ],\n        \"filter\": [\n          {\"range\": {\"@timestamp\": {\"gte\": \"now-1h\"}}}\n        ]\n      }\n    },\n    \"sort\": [{\"@timestamp\": {\"order\": \"desc\"}}]\n  }\n}\n\n网络连接检查：\n{\n  \"index\": \".ds-logs-endpoint.events.network-default-*\",\n  \"queryBody\": {\n    \"size\": 5,\n    \"_source\": [\"@timestamp\", \"source.ip\", \"destination.ip\", \"destination.port\", \"network.bytes\"],\n    \"query\": {\n      \"bool\": {\n        \"must\": [\n          {\"match\": {\"process.name\": \"进程名\"}}\n        ],\n        \"filter\": [\n          {\"range\": {\"@timestamp\": {\"gte\": \"now-2h\", \"lte\": \"now\"}}}\n        ]\n      }\n    }\n  }\n}\n\n使用聚合统计：\n{\n  \"index\": \".ds-logs-endpoint.*-default-*\",\n  \"queryBody\": {\n    \"size\": 0,\n    \"query\": {\n      \"bool\": {\n        \"must\": [\n          {\"match\": {\"file.hash.sha256\": \"文件哈希\"}}\n        ],\n        \"filter\": [\n          {\"range\": {\"@timestamp\": {\"gte\": \"now-24h\"}}}\n        ]\n      }\n    },\n    \"aggs\": {\n      \"affected_hosts\": {\n        \"terms\": {\n          \"field\": \"host.name.keyword\",\n          \"size\": 10\n        }\n      },\n      \"unique_users\": {\n        \"cardinality\": {\n          \"field\": \"user.name.keyword\"\n        }\n      }\n    }\n  }\n}\n\n【常见错误纠正】\n\n索引名称：\n❌ \"index\": \"endgame-*\"\n✓ \"index\": \".ds-logs-endpoint.alerts-default-*\"\n✓ \"index\": \".ds-logs-endpoint.events.network-default-*\"\n✓ \"index\": \".ds-logs-endpoint.events.process-default-*\"\n\n字段名称：\n❌ \"threat.file_name\" (下划线)\n✓ \"file.name\" (点号分隔)\n❌ \"threat.file_sha256\"\n✓ \"file.hash.sha256\"\n❌ \"event_action\"\n✓ \"event.action\"\n\n返回控制：\n❌ 没有指定_source，返回所有字段\n✓ \"_source\": [\"@timestamp\", \"host.name\", \"file.path\", \"process.name\"]\n❌ \"size\": 50 (第一次查询就用50)\n✓ \"size\": 5 (先用5，如果不够再增加到10、20)\n\n时间过滤：\n❌ 没有时间范围限制，查询所有历史数据\n✓ \"filter\": [{\"range\": {\"@timestamp\": {\"gte\": \"now-1h\"}}}]\n\n【输出要求】\n1. 使用纯文本格式，不使用Markdown\n2. 保持输出简洁，关键信息突出\n3. 不要编造数据，只基于警报内容和查询结果\n4. 不要少于5次的工具调用\n5. 如果不确定，宁可建议人工介入"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        16
+      ],
+      "id": "38a86428-fcce-41fa-b281-d36fe76dbaaf",
+      "name": "AI Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "qwen/qwen3-next-80b",
+          "mode": "list",
+          "cachedResultName": "qwen/qwen3-next-80b"
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "a18809c4-936b-4618-ab24-c6f6fec5d160",
+      "name": "Qwen3 模型",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        160,
+        256
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "doBBudPqkhtYH1dg",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Markdown 转 HTML 的完整实现\nconst inputData = $input.first().json;\n\n// 获取AI生成的报告内容\nlet markdownContent = inputData.output \n                   || inputData.text \n                   || inputData.response \n                   || inputData.result\n                   || inputData.content\n                   || JSON.stringify(inputData, null, 2);\n\nconsole.log('原始 Markdown 内容长度:', markdownContent.length);\n\n// ========================================\n// Markdown 转 HTML 转换函数\n// ========================================\nfunction markdownToHtml(markdown) {\n  let html = markdown;\n  \n  // 1. 转义 HTML 特殊字符的函数\n  function escapeHtml(text) {\n    const map = {\n      '&': '&amp;',\n      '<': '&lt;',\n      '>': '&gt;',\n      '\"': '&quot;',\n      \"'\": '&#039;'\n    };\n    return text.replace(/[&<>\"']/g, m => map[m]);\n  }\n  \n  // 2. 处理代码块 (```)\n  html = html.replace(/```([\\w]*)?\\n([\\s\\S]*?)```/g, function(match, lang, code) {\n    return `<pre style=\"background-color: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto; margin: 10px 0;\"><code class=\"language-${lang || 'text'}\">${escapeHtml(code.trim())}</code></pre>`;\n  });\n  \n  // 3. 处理行内代码 (`)\n  html = html.replace(/`([^`]+)`/g, '<code style=\"background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: monospace; color: #e83e8c; font-size: 0.9em;\">$1</code>');\n  \n  // 4. 处理标题 - 增大字体\n  html = html.replace(/^#### (.*)$/gm, '<h4 style=\"font-size: 18px; color: #495057; margin-top: 18px; margin-bottom: 8px; font-weight: 600;\">$1</h4>');\n  html = html.replace(/^### (.*)$/gm, '<h3 style=\"font-size: 20px; color: #343a40; margin-top: 20px; margin-bottom: 10px; font-weight: 600;\">$1</h3>');\n  html = html.replace(/^## (.*)$/gm, '<h2 style=\"font-size: 22px; color: #212529; margin-top: 22px; margin-bottom: 10px; font-weight: 600;\">$1</h2>');\n  html = html.replace(/^# (.*)$/gm, '<h1 style=\"font-size: 26px; color: #000; margin-top: 25px; margin-bottom: 12px; font-weight: 700;\">$1</h1>');\n  \n  // 5. 处理粗体 (**text**)\n  html = html.replace(/\\*\\*(.+?)\\*\\*/g, '<strong style=\"font-weight: 600; color: #000;\">$1</strong>');\n  \n  // 6. 处理斜体 (*text*)\n  html = html.replace(/(?<!\\*)\\*(?!\\*)(.+?)(?<!\\*)\\*(?!\\*)/g, '<em>$1</em>');\n  \n  // 7. 处理链接 [text](url)\n  html = html.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '<a href=\"$2\" style=\"color: #007bff; text-decoration: none;\">$1</a>');\n  \n  // 8. 处理分隔线\n  html = html.replace(/^---+$/gm, '<hr style=\"border: 0; border-top: 2px solid #dee2e6; margin: 15px 0;\">');\n  html = html.replace(/^━━━.*$/gm, '<hr style=\"border: 0; border-top: 2px solid #667eea; margin: 15px 0;\">');\n  \n  // 9. 处理无序列表\n  html = html.replace(/^[\\-\\*\\+] (.+)$/gm, '<li style=\"margin-bottom: 5px;\">$1</li>');\n  // 包裹连续的 <li> 标签\n  html = html.replace(/(<li[^>]*>.*?<\\/li>\\n?)+/gs, match => {\n    return '<ul style=\"margin: 8px 0; padding-left: 25px; line-height: 1.5;\">' + match + '</ul>';\n  });\n  \n  // 10. 处理有序列表\n  html = html.replace(/^\\d+\\.\\s(.+)$/gm, '<li style=\"margin-bottom: 5px;\">$1</li>');\n  \n  // 11. 处理段落 - 减小行距\n  const paragraphs = html.split(/\\n\\n+/);\n  html = paragraphs.map(para => {\n    para = para.trim();\n    if (!para) return '';\n    \n    // 如果已经是HTML标签开头，不包装\n    if (para.match(/^<(h[1-6]|ul|ol|pre|hr|blockquote)/)) {\n      return para;\n    }\n    \n    return `<p style=\"margin: 8px 0; line-height: 1.5;\">${para}</p>`;\n  }).join('\\n');\n  \n  // 12. 处理单换行为 <br> - 减少额外空行\n  html = html.replace(/\\n/g, '<br>');\n  \n  return html;\n}\n\n// 转换 Markdown 为 HTML\nconst htmlContent = markdownToHtml(markdownContent);\n\nconsole.log('转换后的 HTML 长度:', htmlContent.length);\n\n// 返回结果\nreturn [\n  {\n    json: {\n      ...inputData,\n      markdownContent: markdownContent,\n      htmlContent: htmlContent,\n      conversionSuccess: true\n    }\n  }\n];"
+      },
+      "id": "891c9fd4-d9c7-4341-9b20-63de16fcefe5",
+      "name": "Markdown转HTML",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        496,
+        48
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取转换后的 HTML 内容\nconst inputData = $input.first().json;\nconst aiReportHtml = inputData.htmlContent || inputData.markdownContent || '';\n\nconsole.log('接收到的 HTML 内容长度:', aiReportHtml.length);\n\nconst timestamp = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });\n\n// 创建HTML格式的邮件\nconst htmlEmail = `<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <style>\n    body {\n      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n      line-height: 1.5;\n      color: #333;\n      max-width: 800px;\n      margin: 0 auto;\n      padding: 20px;\n      background-color: #f5f5f5;\n    }\n    .email-container {\n      background-color: white;\n      border-radius: 8px;\n      padding: 30px;\n      box-shadow: 0 2px 8px rgba(0,0,0,0.1);\n    }\n    .header {\n      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n      color: white;\n      padding: 20px;\n      border-radius: 8px 8px 0 0;\n      margin: -30px -30px 20px -30px;\n    }\n    .header h1 {\n      margin: 0;\n      font-size: 24px;\n    }\n    .timestamp {\n      font-size: 14px;\n      opacity: 0.9;\n      margin-top: 5px;\n    }\n    .report-content {\n      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n      line-height: 1.5;\n      color: #333;\n      font-size: 14px;\n    }\n    .report-content h1 {\n      font-size: 26px;\n      color: #000;\n      margin-top: 25px;\n      margin-bottom: 12px;\n      font-weight: 700;\n    }\n    .report-content h2 {\n      font-size: 22px;\n      color: #212529;\n      margin-top: 22px;\n      margin-bottom: 10px;\n      font-weight: 600;\n    }\n    .report-content h3 {\n      font-size: 20px;\n      color: #343a40;\n      margin-top: 20px;\n      margin-bottom: 10px;\n      font-weight: 600;\n    }\n    .report-content h4 {\n      font-size: 18px;\n      color: #495057;\n      margin-top: 18px;\n      margin-bottom: 8px;\n      font-weight: 600;\n    }\n    .report-content p {\n      margin: 8px 0;\n      line-height: 1.5;\n    }\n    .report-content code {\n      background-color: #f4f4f4;\n      padding: 2px 6px;\n      border-radius: 3px;\n      font-family: 'Consolas', 'Monaco', monospace;\n      color: #e83e8c;\n      font-size: 0.9em;\n    }\n    .report-content pre {\n      background-color: #2d2d2d;\n      color: #f8f8f2;\n      padding: 15px;\n      border-radius: 5px;\n      overflow-x: auto;\n      margin: 10px 0;\n    }\n    .report-content pre code {\n      background: none;\n      color: inherit;\n      padding: 0;\n    }\n    .report-content ul, .report-content ol {\n      margin: 8px 0;\n      padding-left: 25px;\n      line-height: 1.5;\n    }\n    .report-content li {\n      margin-bottom: 5px;\n    }\n    .report-content a {\n      color: #007bff;\n      text-decoration: none;\n    }\n    .report-content a:hover {\n      text-decoration: underline;\n    }\n    .report-content strong {\n      font-weight: 600;\n      color: #000;\n    }\n    .report-content hr {\n      border: 0;\n      border-top: 2px solid #dee2e6;\n      margin: 15px 0;\n    }\n    .footer {\n      margin-top: 30px;\n      padding-top: 20px;\n      border-top: 2px solid #e9ecef;\n      font-size: 12px;\n      color: #6c757d;\n      text-align: center;\n    }\n    .alert-badge {\n      display: inline-block;\n      padding: 4px 12px;\n      background-color: #dc3545;\n      color: white;\n      border-radius: 12px;\n      font-size: 12px;\n      font-weight: bold;\n      margin-left: 10px;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"email-container\">\n    <div class=\"header\">\n      <h1>🛡️ 安全警报分析报告 <span class=\"alert-badge\">SECURITY ALERT</span></h1>\n      <div class=\"timestamp\">📅 报告生成时间: ${timestamp}</div>\n    </div>\n    \n    <div class=\"report-content\">\n      ${aiReportHtml}\n    </div>\n    \n    <div class=\"footer\">\n      <p><strong>Graudframe ML 安全监控系统</strong></p>\n      <p>此报告由 AI 安全分析引擎 (Qwen3-80B) 自动生成</p>\n      <p>如有疑问,请联系安全团队 | info@tocharian.eu</p>\n      <p style=\"margin-top: 10px; font-size: 11px;\">⚠️ 本邮件包含敏感安全信息,请妥善保管</p>\n    </div>\n  </div>\n</body>\n</html>`;\n\n// 创建纯文本版本\nconst textEmail = `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🛡️ 安全警报分析报告\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📅 报告生成时间: ${timestamp}\n\n${inputData.markdownContent || aiReportHtml}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nGraudframe ML 安全监控系统\n此报告由 AI 安全分析引擎自动生成\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;\n\nreturn [\n  {\n    json: {\n      emailSubject: `🚨【安全警报】Graudframe ML 安全分析报告 - ${timestamp}`,\n      emailBodyHtml: htmlEmail,\n      emailBodyText: textEmail,\n      timestamp: timestamp,\n      reportLength: aiReportHtml.length\n    }\n  }\n];"
+      },
+      "id": "49618c64-11ee-448b-a0f4-2fdaa2ccccdd",
+      "name": "格式化邮件内容",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        672,
+        32
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "fromEmail": "your_email@example.com",
+        "toEmail": "to_email@example.com",
+        "subject": "={{ $json.emailSubject }}",
+        "html": "={{ $json.emailBodyHtml }}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "id": "99394fdf-4d28-4e07-b18d-22aa2d6ea119",
+      "name": "发送邮件",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [
+        896,
+        32
+      ],
+      "typeVersion": 2.1,
+      "webhookId": "512bd7c0-a798-414e-bc9f-8811a78611f8",
+      "credentials": {
+        "smtp": {
+          "id": "HMqNeAseokx88DlM",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"success\", \"message\": \"安全警报已接收并处理\", \"timestamp\": $json.timestamp, \"report_sent_to\": \"your_email@example.com\" } }}",
+        "options": {}
+      },
+      "id": "7061ac16-16f0-4a55-a33e-4231b6d539e5",
+      "name": "响应Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1120,
+        32
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://192.168.1.2:3001/mcp",
+        "serverTransport": "httpStreamable",
+        "include": "selected",
+        "includeTools": [
+          "es_search"
+        ],
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        256
+      ],
+      "id": "fffb5a99-35bd-45fd-a2d7-4dddeda0989a",
+      "name": "MCP Client"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "提取警报数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提取警报数据": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Markdown转HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qwen3 模型": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown转HTML": {
+      "main": [
+        [
+          {
+            "node": "格式化邮件内容",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "格式化邮件内容": {
+      "main": [
+        [
+          {
+            "node": "发送邮件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "发送邮件": {
+      "main": [
+        [
+          {
+            "node": "响应Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "26dc14fa-1e41-44c0-ac3a-e535cf534325",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f687a50c61872e8ca3cdc5f4ef80c58fddb4a1dc1fa765569c5fde992f32b225"
+  },
+  "id": "UhNo7qQyLTewnHaD",
+  "tags": []
+}
