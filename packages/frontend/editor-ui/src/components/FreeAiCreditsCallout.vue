@@ -28,7 +28,7 @@ const props = defineProps<Props>();
 
 const LANGCHAIN_NODES_PREFIX = '@newflow/n8n-nodes-langchain.';
 
-const N8N_NODES_PREFIX = '@newflow/n8n-nodes.';
+const NEWFLOW_NODES_PREFIX = '@newflow/n8n-nodes.';
 
 const NODES_WITH_OPEN_AI_API_CREDENTIAL = [
 	`${LANGCHAIN_NODES_PREFIX}openAi`,
