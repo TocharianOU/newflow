@@ -13,7 +13,7 @@ import { Config, Env } from '@newflow/config';
 export class CommunityPackagesConfig {
 	/** Whether to enable community packages */
 	@Env('NEWFLOW_COMMUNITY_PACKAGES_ENABLED')
-	enabled: boolean = true;
+	enabled: boolean = false;
 
 	/** NPM registry URL to pull community packages from */
 	@Env('NEWFLOW_COMMUNITY_PACKAGES_REGISTRY')
@@ -29,7 +29,7 @@ export class CommunityPackagesConfig {
 
 	/** Whether to enable and show search suggestion of packages verified by n8n */
 	@Env('NEWFLOW_VERIFIED_PACKAGES_ENABLED')
-	verifiedEnabled: boolean = true;
+	verifiedEnabled: boolean = false;
 
 	/** Whether to load community packages */
 	@Env('NEWFLOW_COMMUNITY_PACKAGES_PREVENT_LOADING')

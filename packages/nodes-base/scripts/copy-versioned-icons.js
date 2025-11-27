@@ -39,6 +39,14 @@ function copyVersionedIcons(baseDir) {
 				'dist/nodes/Aws/S3/V2/s3.svg',
 			],
 		},
+		// MySQL v2 needs parent icon
+		{
+			source: 'nodes/MySql/mysql.svg',
+			targets: [
+				'nodes/MySql/v2/mysql.svg',
+				'dist/nodes/MySql/v2/mysql.svg',
+			],
+		},
 		// Add more mappings here if needed for other versioned nodes
 	];
 
