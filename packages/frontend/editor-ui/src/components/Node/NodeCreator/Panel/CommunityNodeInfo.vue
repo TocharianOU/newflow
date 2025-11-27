@@ -71,6 +71,11 @@ async function fetchPackageInfo(packageName: string) {
 		return;
 	}
 
+	// Skip npm registry requests for built-in @newflow packages
+	if (packageName.startsWith('@newflow/')) {
+		return;
+	}
+
 	const url = `https://registry.npmjs.org/${packageName}`;
 
 	try {

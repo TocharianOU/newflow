@@ -38,6 +38,11 @@ async function openIssuesPage() {
 }
 
 async function getBugsUrl(packageName: string) {
+	// Skip npm registry requests for built-in @newflow packages
+	if (packageName.startsWith('@newflow/')) {
+		return;
+	}
+
 	const url = `https://registry.npmjs.org/${packageName}`;
 
 	try {
