@@ -31,6 +31,14 @@ function copyVersionedIcons(baseDir) {
 				'dist/nodes/Postgres/v2/postgres.svg',
 			],
 		},
+		// AWS S3 V2 needs parent icon
+		{
+			source: 'nodes/Aws/S3/s3.svg',
+			targets: [
+				'nodes/Aws/S3/V2/s3.svg',
+				'dist/nodes/Aws/S3/V2/s3.svg',
+			],
+		},
 		// Add more mappings here if needed for other versioned nodes
 	];
 
