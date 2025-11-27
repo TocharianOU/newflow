@@ -40,8 +40,14 @@ import {
 
 const CRED_KEYWORDS_TO_FILTER = ['API', 'OAuth1', 'OAuth2'];
 const NODE_KEYWORDS_TO_FILTER = ['Trigger'];
-const COMMUNITY_PACKAGE_NAME_REGEX = /^(?!@n8n\/)(@[\w.-]+\/)?n8n-nodes-(?!base\b)\b\w+/g;
+const COMMUNITY_PACKAGE_NAME_REGEX = /^(?!@n8n\/)(?!@newflow\/)(@[\w.-]+\/)?n8n-nodes-(?!base\b)\b\w+/g;
 const RESOURCE_MAPPER_FIELD_NAME_REGEX = /value\["(.+?)"\]/s;
+
+// Built-in package names that should not be treated as community packages
+const BUILTIN_PACKAGE_NAMES = [
+	'n8n-nodes-base',
+	'@newflow/n8n-nodes-langchain',
+];
 
 export function getAppNameFromCredType(name: string) {
 	return name
@@ -77,6 +83,12 @@ export function filterTemplateNodes(nodes: ITemplatesNode[]) {
 }
 
 export function isCommunityPackageName(packageName: string): boolean {
+	// First check if it's in the built-in packages whitelist
+	const packageNameWithoutNode = packageName.split('.')[0];
+	if (BUILTIN_PACKAGE_NAMES.includes(packageNameWithoutNode)) {
+		return false;
+	}
+
 	COMMUNITY_PACKAGE_NAME_REGEX.lastIndex = 0;
 	// Community packages names start with <@username/>n8n-nodes- not followed by word 'base'
 	const nameMatch = COMMUNITY_PACKAGE_NAME_REGEX.exec(packageName);
