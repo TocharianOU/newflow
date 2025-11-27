@@ -201,10 +201,10 @@ export const useWorkflowsStore = defineStore(STORES.WORKFLOWS, () => {
 	const isWorkflowActive = computed(() => workflow.value.active);
 
 	const workflowTriggerNodes = computed(() =>
-		workflow.value.nodes.filter((node: INodeUi) => {
-			const nodeType = nodeTypesStore.getNodeType(node.type, node.typeVersion);
-			return nodeType && nodeType.group.includes('trigger');
-		}),
+	workflow.value.nodes.filter((node: INodeUi) => {
+		const nodeType = nodeTypesStore.getNodeType(node.type, node.typeVersion);
+		return nodeType && nodeType.group && nodeType.group.includes('trigger');
+	}),
 	);
 
 	const currentWorkflowHasWebhookNode = computed(

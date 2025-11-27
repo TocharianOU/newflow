@@ -131,11 +131,12 @@ export function useWorkflowSaving({ router }: { router: ReturnType<typeof useRou
 
 		const nodeType = nodeTypesStore.getNodeType(node.type, node.typeVersion);
 
-		return (
-			nodeType !== null &&
-			nodeType.group.includes('trigger') &&
-			!NON_ACTIVATABLE_TRIGGER_NODE_TYPES.includes(node.type)
-		);
+	return (
+		nodeType !== null &&
+		nodeType.group &&
+		nodeType.group.includes('trigger') &&
+		!NON_ACTIVATABLE_TRIGGER_NODE_TYPES.includes(node.type)
+	);
 	}
 
 	async function getWorkflowDeactivationInfo(

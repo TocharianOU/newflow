@@ -202,7 +202,7 @@ const inputSize = computed(() => ndvStore.ndvInputDataWithPinnedData.length);
 const isTriggerNode = computed(
 	() =>
 		!!activeNodeType.value &&
-		(activeNodeType.value.group.includes('trigger') ||
+		((activeNodeType.value.group && activeNodeType.value.group.includes('trigger')) ||
 			activeNodeType.value.name === START_NODE_TYPE),
 );
 

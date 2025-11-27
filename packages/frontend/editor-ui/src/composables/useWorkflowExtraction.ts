@@ -408,9 +408,10 @@ export function useWorkflowExtraction() {
 	function tryExtractNodesIntoSubworkflow(nodeIds: string[]): boolean {
 		const subGraph = nodeIds.map(workflowsStore.getNodeById).filter((x) => x !== undefined);
 
-		const triggers = subGraph.filter((x) =>
-			useNodeTypesStore().getNodeType(x.type, x.typeVersion)?.group.includes('trigger'),
-		);
+	const triggers = subGraph.filter((x) => {
+		const nodeType = useNodeTypesStore().getNodeType(x.type, x.typeVersion);
+		return nodeType?.group && nodeType.group.includes('trigger');
+	});
 		if (triggers.length > 0) {
 			showError(
 				i18n.baseText('workflowExtraction.error.triggerSelected', {

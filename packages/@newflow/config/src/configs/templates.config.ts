@@ -13,7 +13,7 @@ import { Config, Env } from '../decorators';
 export class TemplatesConfig {
 	/** Whether to load workflow templates. */
 	@Env('NEWFLOW_TEMPLATES_ENABLED')
-	enabled: boolean = true;
+	enabled: boolean = false;
 
 	/** Host to retrieve workflow templates from endpoints. */
 	@Env('NEWFLOW_TEMPLATES_HOST')

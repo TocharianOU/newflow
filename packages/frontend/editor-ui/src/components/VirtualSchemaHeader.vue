@@ -25,7 +25,7 @@ const props = defineProps<{
 }>();
 
 const i18n = useI18n();
-const isTrigger = computed(() => Boolean(props.nodeType?.group.includes('trigger')));
+const isTrigger = computed(() => Boolean(props.nodeType?.group && props.nodeType.group.includes('trigger')));
 const emit = defineEmits<{
 	'click:toggle': [];
 }>();

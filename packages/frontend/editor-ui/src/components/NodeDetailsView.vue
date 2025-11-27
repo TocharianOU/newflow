@@ -118,11 +118,11 @@ const activeNodeType = computed(() => {
 
 const showTriggerWaitingWarning = computed(
 	() =>
-		triggerWaitingWarningEnabled.value &&
-		!!activeNodeType.value &&
-		!activeNodeType.value.group.includes('trigger') &&
-		workflowsStore.isWorkflowRunning &&
-		workflowsStore.executionWaitingForWebhook,
+	triggerWaitingWarningEnabled.value &&
+	!!activeNodeType.value &&
+	!(activeNodeType.value.group && activeNodeType.value.group.includes('trigger')) &&
+	workflowsStore.isWorkflowRunning &&
+	workflowsStore.executionWaitingForWebhook,
 );
 
 const workflowRunData = computed(() => {
@@ -198,7 +198,7 @@ const inputSize = computed(() => ndvStore.ndvInputDataWithPinnedData.length);
 const isTriggerNode = computed(
 	() =>
 		!!activeNodeType.value &&
-		(activeNodeType.value.group.includes('trigger') ||
+		((activeNodeType.value.group && activeNodeType.value.group.includes('trigger')) ||
 			activeNodeType.value.name === START_NODE_TYPE),
 );
 

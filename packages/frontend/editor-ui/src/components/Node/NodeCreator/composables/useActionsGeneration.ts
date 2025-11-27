@@ -87,7 +87,7 @@ const customNodeActionsParsers: {
 };
 
 function getNodeTypeBase(nodeTypeDescription: INodeTypeDescription, label?: string) {
-	const isTrigger = nodeTypeDescription.group.includes('trigger');
+	const isTrigger = nodeTypeDescription.group && nodeTypeDescription.group.includes('trigger');
 	const category = isTrigger
 		? cachedBaseText('nodeCreator.actionsCategory.triggers')
 		: cachedBaseText('nodeCreator.actionsCategory.actions');
@@ -399,7 +399,7 @@ export function useActionsGenerator() {
 		const actions: ActionsRecord<typeof mergedNodes> = {};
 		const mergedNodes: SimplifiedNodeType[] = [];
 		visibleNodeTypes
-			.filter((node) => !node.group.includes('trigger'))
+			.filter((node) => node.group && !node.group.includes('trigger'))
 			.forEach((app) => {
 				const appActions = generateNodeActions(app);
 				actions[app.name] = appActions;
@@ -422,7 +422,7 @@ export function useActionsGenerator() {
 			});
 
 		visibleNodeTypes
-			.filter((node) => node.group.includes('trigger'))
+			.filter((node) => node.group && node.group.includes('trigger'))
 			.forEach((trigger) => {
 				const normalizedName = trigger.name.replace('Trigger', '');
 				const triggerActions = generateNodeActions(trigger);

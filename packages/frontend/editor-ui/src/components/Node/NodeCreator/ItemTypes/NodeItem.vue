@@ -118,7 +118,7 @@ const displayName = computed<string>(() => {
 });
 
 const isTrigger = computed<boolean>(() => {
-	return props.nodeType.group.includes('trigger') && !hasActions.value;
+	return props.nodeType.group && props.nodeType.group.includes('trigger') && !hasActions.value;
 });
 
 const communityNodeType = computed(() => {

@@ -257,7 +257,7 @@ function onSelected(item: INodeCreateElement) {
 function subcategoriesMapper(item: INodeCreateElement) {
 	if (item.type !== 'node') return item;
 
-	const hasTriggerGroup = item.properties.group.includes('trigger');
+	const hasTriggerGroup = item.properties.group && item.properties.group.includes('trigger');
 	const nodeActions = getFilteredActions(item, actions);
 	const hasActions = nodeActions.length > 0;
 
@@ -278,7 +278,7 @@ function baseSubcategoriesFilter(item: INodeCreateElement): boolean {
 	if (item.type === 'section') return true;
 	if (item.type !== 'node') return false;
 
-	const hasTriggerGroup = item.properties.group.includes('trigger');
+	const hasTriggerGroup = item.properties.group && item.properties.group.includes('trigger');
 	const nodeActions = getFilteredActions(item, actions);
 	const hasActions = nodeActions.length > 0;
 

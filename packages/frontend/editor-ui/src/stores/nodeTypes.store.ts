@@ -169,10 +169,10 @@ export const useNodeTypesStore = defineStore(STORES.NODE_TYPES, () => {
 	});
 
 	const isTriggerNode = computed(() => {
-		return (nodeTypeName: string) => {
-			const nodeType = getNodeType.value(nodeTypeName);
-			return !!(nodeType && nodeType.group.includes('trigger'));
-		};
+	return (nodeTypeName: string) => {
+		const nodeType = getNodeType.value(nodeTypeName);
+		return !!(nodeType && nodeType.group && nodeType.group.includes('trigger'));
+	};
 	});
 
 	const isToolNode = computed(() => {

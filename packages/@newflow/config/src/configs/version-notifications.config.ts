@@ -13,7 +13,7 @@ import { Config, Env } from '../decorators';
 export class VersionNotificationsConfig {
 	/** Whether to request notifications about new n8n versions */
 	@Env('NEWFLOW_VERSION_NOTIFICATIONS_ENABLED')
-	enabled: boolean = true;
+	enabled: boolean = false;
 
 	/** Endpoint to retrieve version information from */
 	@Env('NEWFLOW_VERSION_NOTIFICATIONS_ENDPOINT')
@@ -21,7 +21,7 @@ export class VersionNotificationsConfig {
 
 	/** Whether to request What's New articles. Also requires `NEWFLOW_VERSION_NOTIFICATIONS_ENABLED` to be enabled */
 	@Env('NEWFLOW_VERSION_NOTIFICATIONS_WHATS_NEW_ENABLED')
-	whatsNewEnabled: boolean = true;
+	whatsNewEnabled: boolean = false;
 
 	/** Endpoint to retrieve "What's New" articles from */
 	@Env('NEWFLOW_VERSION_NOTIFICATIONS_WHATS_NEW_ENDPOINT')

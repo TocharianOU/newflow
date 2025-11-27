@@ -132,7 +132,7 @@ const isFormTriggerNode = computed(() =>
 
 const isPollingTypeNode = computed(() => !!nodeType.value?.polling);
 
-const isScheduleTrigger = computed(() => !!nodeType.value?.group.includes('schedule'));
+const isScheduleTrigger = computed(() => !!(nodeType.value?.group && nodeType.value.group.includes('schedule')));
 
 const isWebhookNode = computed(() =>
 	nodeType.value ? nodeType.value.name === WEBHOOK_NODE_TYPE : false,

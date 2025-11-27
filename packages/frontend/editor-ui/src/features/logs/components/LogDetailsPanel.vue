@@ -62,7 +62,7 @@ const nodeTypeStore = useNodeTypesStore();
 
 const type = computed(() => nodeTypeStore.getNodeType(logEntry.node.type));
 const consumedTokens = computed(() => getSubtreeTotalConsumedTokens(logEntry, false));
-const isTriggerNode = computed(() => type.value?.group.includes('trigger'));
+const isTriggerNode = computed(() => type.value?.group && type.value.group.includes('trigger'));
 const container = useTemplateRef<HTMLElement>('container');
 const resizer = useResizablePanel('NEWFLOW_LOGS_INPUT_PANEL_WIDTH', {
 	container,

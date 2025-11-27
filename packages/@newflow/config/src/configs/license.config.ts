@@ -17,7 +17,7 @@ export class LicenseConfig {
 
 	/** Whether autorenewal for licenses is enabled. */
 	@Env('NEWFLOW_LICENSE_AUTO_RENEW_ENABLED')
-	autoRenewalEnabled: boolean = true;
+	autoRenewalEnabled: boolean = false;
 
 	/** Activation key to initialize license. */
 	@Env('NEWFLOW_LICENSE_ACTIVATION_KEY')
