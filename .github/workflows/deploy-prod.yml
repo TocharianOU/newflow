@@ -70,15 +70,7 @@ jobs:
           set -euo pipefail
           ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "rm -rf '$DEPLOY_DIR/app' && mkdir -p '$DEPLOY_DIR/app'"
 
-          tar \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='*/node_modules' \
-            --exclude='.turbo' \
-            --exclude='*/.turbo' \
-            --exclude='coverage' \
-            --exclude='*/coverage' \
-            -czf - . | ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "tar -xzf - -C '$DEPLOY_DIR/app'"
+          tar -czf - compiled docker | ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "tar -xzf - -C '$DEPLOY_DIR/app'"
 
           ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "cat > '$DEPLOY_DIR/.env'" <<ENVFILE
           NEWFLOW_PORT=$NEWFLOW_PORT
