@@ -22,6 +22,7 @@ jobs:
       DEPLOY_DIR: /opt/newflow/prod
       NEWFLOW_PORT: ${{ vars.NEWFLOW_PORT || '5677' }}
       DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+      CUSTOM_AI_API_KEY: ${{ secrets.CUSTOM_AI_API_KEY }}
 
     steps:
       - name: Checkout
@@ -94,6 +95,9 @@ jobs:
           NEWFLOW_AUTO_SETUP_ENABLED=true
           NEWFLOW_AUTO_SETUP_EMAIL=admin@test.com
           NEWFLOW_AUTO_SETUP_PASSWORD=password123
+          CUSTOM_AI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+          CUSTOM_AI_API_KEY=$CUSTOM_AI_API_KEY
+          CUSTOM_AI_MODEL=qwen-plus
           ENVFILE
 
           ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "cat > '$DEPLOY_DIR/docker-compose.yml'" <<'COMPOSE'

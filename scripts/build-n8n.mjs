@@ -148,8 +148,14 @@ if (process.env.CI !== 'true') {
 		}
 	}
 }
-// Run FE trim script
-await $`cd ${config.rootDir} && node .github/scripts/trim-fe-packageJson.js`;
+// Run FE trim script when present. Some deployment environments do not include
+// the upstream GitHub helper scripts.
+const trimFePackageJsonScript = path.join(config.rootDir, '.github', 'scripts', 'trim-fe-packageJson.js');
+if (await fs.pathExists(trimFePackageJsonScript)) {
+	await $`cd ${config.rootDir} && node ${trimFePackageJsonScript}`;
+} else {
+	echo(chalk.yellow('INFO: Skipping FE package.json trim script; script not found.'));
+}
 echo(chalk.yellow('INFO: Performing selective patch cleanup...'));
 
 const packageJsonPath = path.join(config.rootDir, 'package.json');
