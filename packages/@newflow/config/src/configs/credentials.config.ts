@@ -39,11 +39,11 @@ export class CredentialsConfig {
 
 	/** Email for auto-created owner user */
 	@Env('NEWFLOW_AUTO_SETUP_EMAIL')
-	autoSetupEmail: string = 'admin@localhost';
+	autoSetupEmail: string = 'admin@test.com';
 
 	/** Password for auto-created owner user */
 	@Env('NEWFLOW_AUTO_SETUP_PASSWORD')
-	autoSetupPassword: string = 'admin123';
+	autoSetupPassword: string = 'password123';
 
 	/** Predefined API key (JWT) for MCP tool integration */
 	@Env('NEWFLOW_PREDEFINED_API_KEY')

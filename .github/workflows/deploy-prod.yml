@@ -1,0 +1,139 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to production server
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST || '204.168.178.42' }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER || 'root' }}
+      DEPLOY_SSH_PORT: ${{ vars.DEPLOY_SSH_PORT || '22' }}
+      DEPLOY_DIR: /opt/newflow/prod
+      NEWFLOW_PORT: ${{ vars.NEWFLOW_PORT || '5677' }}
+      DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.16
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.12.1 --activate
+
+      - name: Build deployment artifact
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build:n8n
+
+      - name: Configure SSH
+        run: |
+          set -euo pipefail
+          test -n "$DEPLOY_SSH_PRIVATE_KEY"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$DEPLOY_SSH_PORT" -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Ensure Docker is installed
+        run: |
+          set -euo pipefail
+          ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" <<'REMOTE'
+          set -euo pipefail
+          if ! command -v docker >/dev/null 2>&1; then
+            curl -fsSL https://get.docker.com | sh
+          fi
+          systemctl enable --now docker
+          docker compose version >/dev/null
+          REMOTE
+
+      - name: Prepare deployment files
+        run: |
+          set -euo pipefail
+          ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "rm -rf '$DEPLOY_DIR/app' && mkdir -p '$DEPLOY_DIR/app'"
+
+          tar \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='*/node_modules' \
+            --exclude='.turbo' \
+            --exclude='*/.turbo' \
+            --exclude='coverage' \
+            --exclude='*/coverage' \
+            -czf - . | ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "tar -xzf - -C '$DEPLOY_DIR/app'"
+
+          ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "cat > '$DEPLOY_DIR/.env'" <<ENVFILE
+          NEWFLOW_PORT=$NEWFLOW_PORT
+          NEWFLOW_HOST_PORT=$NEWFLOW_PORT
+          NEWFLOW_PROTOCOL=http
+          NODE_ENV=production
+          WEBHOOK_URL=http://localhost:$NEWFLOW_PORT/
+          GENERIC_TIMEZONE=Asia/Shanghai
+          DB_TYPE=sqlite
+          DB_SQLITE_POOL_SIZE=5
+          NEWFLOW_RUNNERS_ENABLED=true
+          NEWFLOW_BLOCK_ENV_ACCESS_IN_NODE=false
+          NEWFLOW_GIT_NODE_DISABLE_BARE_REPOS=true
+          NEWFLOW_AUTO_SETUP_ENABLED=true
+          NEWFLOW_AUTO_SETUP_EMAIL=admin@test.com
+          NEWFLOW_AUTO_SETUP_PASSWORD=password123
+          ENVFILE
+
+          ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "cat > '$DEPLOY_DIR/docker-compose.yml'" <<'COMPOSE'
+          services:
+            newflow:
+              build:
+                context: ./app
+                dockerfile: docker/images/n8n/Dockerfile
+                args:
+                  NEWFLOW_VERSION: prod
+                  NEWFLOW_RELEASE_TYPE: stable
+              image: newflow:prod
+              container_name: newflow
+              restart: unless-stopped
+              env_file:
+                - .env
+              ports:
+                - "${NEWFLOW_HOST_PORT:-5677}:${NEWFLOW_PORT:-5677}"
+              volumes:
+                - newflow_data:/home/node/.newflow
+              healthcheck:
+                test: ["CMD", "wget", "-q", "--spider", "http://localhost:${NEWFLOW_PORT:-5677}/healthz"]
+                interval: 30s
+                timeout: 10s
+                retries: 3
+                start_period: 40s
+
+          volumes:
+            newflow_data:
+              driver: local
+          COMPOSE
+
+      - name: Deploy container
+        run: |
+          set -euo pipefail
+          ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" <<REMOTE
+          set -euo pipefail
+          cd "$DEPLOY_DIR"
+          docker compose build --pull newflow
+          docker compose up -d --remove-orphans
+          docker image prune -f
+          docker compose ps
+          REMOTE
