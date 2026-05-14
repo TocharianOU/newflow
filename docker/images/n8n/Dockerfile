@@ -62,7 +62,11 @@ RUN cd /usr/local/lib/node_modules/n8n && \
     mkdir -p /home/node/.newflow && \
     chown -R node:node /home/node
 
-RUN cd /usr/local/lib/node_modules/n8n/node_modules/pdfjs-dist && npm install @napi-rs/canvas
+RUN if [ -d /usr/local/lib/node_modules/n8n/node_modules/pdfjs-dist ]; then \
+      cd /usr/local/lib/node_modules/n8n/node_modules/pdfjs-dist && npm install @napi-rs/canvas; \
+    else \
+      echo "pdfjs-dist package directory not found; skipping optional canvas install"; \
+    fi
 
 EXPOSE 5678/tcp
 USER node
