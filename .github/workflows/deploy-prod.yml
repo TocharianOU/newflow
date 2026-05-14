@@ -76,6 +76,7 @@ jobs:
           NEWFLOW_PORT=$NEWFLOW_PORT
           NEWFLOW_HOST_PORT=$NEWFLOW_PORT
           NEWFLOW_PROTOCOL=http
+          NEWFLOW_SECURE_COOKIE=false
           NODE_ENV=production
           WEBHOOK_URL=http://localhost:$NEWFLOW_PORT/
           GENERIC_TIMEZONE=Asia/Shanghai

@@ -127,13 +127,24 @@ export class AutoSetupService {
 	 */
 	private async createPredefinedApiKey(user: User): Promise<string> {
 		let apiKey = this.globalConfig.credentials.predefinedApiKey?.trim();
+		const label = 'Predefined: MCP Tool Integration';
+		const scopes = getApiKeyScopesForRole(user);
+
+		const existingForUser = await this.apiKeyRepository.findOne({
+			where: { userId: user.id, label },
+		});
 
 		// Generate API key if not predefined
 		if (!apiKey) {
+			if (existingForUser) {
+				this.logger.debug('Predefined API key already exists for user');
+				return existingForUser.apiKey;
+			}
+
 			this.logger.debug('No predefined API key, generating new one...');
 			const newApiKey = await this.publicApiKeyService.createPublicApiKeyForUser(user, {
-				label: 'Predefined: MCP Tool Integration',
-				scopes: getApiKeyScopesForRole(user),
+				label,
+				scopes,
 				expiresAt: null,
 			});
 			return newApiKey.apiKey;
@@ -152,13 +163,24 @@ export class AutoSetupService {
 			return apiKey;
 		}
 
+		if (existingForUser) {
+			await this.apiKeyRepository.update(
+				{ id: existingForUser.id },
+				{
+					apiKey,
+					scopes,
+				},
+			);
+			return apiKey;
+		}
+
 		// Insert predefined API key with generated ID
 		await this.apiKeyRepository.insert({
 			id: generateNanoId(),
 			userId: user.id,
 			apiKey,
-			label: 'Predefined: MCP Tool Integration',
-			scopes: getApiKeyScopesForRole(user),
+			label,
+			scopes,
 		});
 
 		return apiKey;

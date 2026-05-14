@@ -21,7 +21,7 @@ class CookieConfig {
 	@Env('NEWFLOW_SECURE_COOKIE')
 	secure: boolean = true;
 
-	/** This sets the `Samesite` flag on n8n auth cookie */
+	/** This sets the `Samesite` flag on NewFlow auth cookie */
 	@Env('NEWFLOW_SAMESITE_COOKIE', samesiteSchema)
 	samesite: Samesite = 'lax';
 }
