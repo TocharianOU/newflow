@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="NewMind AI 是面向企业安全调查、知识检索与自动化处置的一体化智能运营平台。"
+    />
+    <title>NewMind AI | 企业级 AI 安全调查与自动化平台</title>
+    <link rel="icon" href="/public/favicon.ico" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/">
+        <img src="/public/newmind-icon.png" alt="NewMind AI" />
+        <span>NewMind AI</span>
+      </a>
+      <nav>
+        <a href="#products">产品体系</a>
+        <a href="#workspace">调查工作台</a>
+        <a href="#architecture">平台架构</a>
+        <a href="#access">访问入口</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Enterprise AI investigation and automation platform</p>
+          <h1>让企业安全调查从发现问题直达自动化处置。</h1>
+          <p class="hero-text">
+            NewMind AI 连接 NewChat、NewRAG 与 NewFlow，将告警分析、知识检索、证据整理、
+            风险研判和处置编排沉淀为一套可复用的企业智能工作流。
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#access">进入产品入口</a>
+            <a class="button ghost" href="#architecture">查看平台架构</a>
+          </div>
+          <div class="hero-metrics" aria-label="Platform capabilities">
+            <div><strong>3</strong><span>核心产品</span></div>
+            <div><strong>RAG</strong><span>知识增强</span></div>
+            <div><strong>MCP</strong><span>工具连接</span></div>
+          </div>
+        </div>
+
+        <div class="console-card" aria-label="Investigation cockpit preview">
+          <div class="console-top">
+            <span></span><span></span><span></span>
+            <strong>NewChat 调查视图</strong>
+          </div>
+          <div class="alert-card">
+            <small>安全告警</small>
+            <b>检测到可疑进程链路</b>
+            <p>AI 正在关联主机、进程、网络连接、知识文档与历史处置记录。</p>
+          </div>
+          <div class="signal-grid">
+            <div>终端事件</div>
+            <div>知识文档</div>
+            <div>Elastic 数据</div>
+            <div>处置动作</div>
+          </div>
+          <div class="ai-response">
+            <span>AI 研判结论</span>
+            <p>该事件命中高风险行为组合，已生成证据摘要，并可交由 NewFlow 执行审批后的处置流程。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="products" class="section">
+        <div class="section-heading">
+          <p class="eyebrow">Product system</p>
+          <h2>三大核心产品，覆盖从知识到行动的完整闭环。</h2>
+        </div>
+        <div class="product-grid">
+          <article class="product-card chat">
+            <div class="product-icon">C</div>
+            <p class="tag">AI investigation workspace</p>
+            <h3>NewChat</h3>
+            <p>
+              面向安全告警、数据分析和运营问题的 AI 调查工作台，支持对话式研判、线索聚合、
+              证据沉淀、报告生成和人工确认。
+            </p>
+          </article>
+          <article class="product-card rag">
+            <div class="product-icon">R</div>
+            <p class="tag">Knowledge retrieval engine</p>
+            <h3>NewRAG</h3>
+            <p>
+              企业知识检索引擎，接入文档、手册、历史工单、日志说明和安全知识库，为 AI
+              提供可引用、可追溯的上下文。
+            </p>
+          </article>
+          <article class="product-card flow">
+            <img class="product-logo" src="/public/newflow-logo.svg" alt="NewFlow logo" />
+            <p class="tag">Automation orchestration</p>
+            <h3>NewFlow</h3>
+            <p>
+              自动化编排平台，将 AI 研判转化为可执行流程，连接 MCP、Elastic、API、邮件、
+              Webhook、审批和处置动作。
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="workspace" class="section workspace">
+        <div>
+          <p class="eyebrow">NewChat cockpit</p>
+          <h2>不止于问答，而是面向业务闭环的调查工作台。</h2>
+          <p>
+            NewChat 将一次事件从“看到告警”推进到“完成研判和行动”。它可以调用 NewRAG
+            检索企业知识，也可以把确认后的结论交给 NewFlow 执行自动化流程。
+          </p>
+        </div>
+        <div class="workflow-steps">
+          <div><span>01</span><strong>接收问题或告警</strong><p>统一接入安全事件、ES 查询、业务数据和人工问题。</p></div>
+          <div><span>02</span><strong>检索知识和上下文</strong><p>关联文档、索引结构、历史案例和工具返回结果。</p></div>
+          <div><span>03</span><strong>生成研判和报告</strong><p>输出归因分析、风险分级、证据链和处置建议。</p></div>
+          <div><span>04</span><strong>编排自动化执行</strong><p>触发 NewFlow 流程，完成通知、留痕、审批和处置。</p></div>
+        </div>
+      </section>
+
+      <section id="architecture" class="section architecture">
+        <div class="section-heading">
+          <p class="eyebrow">Architecture</p>
+          <h2>从数据源、知识推理到自动化行动的企业 AI 架构。</h2>
+        </div>
+        <div class="architecture-map">
+          <div class="arch-column">
+            <span>数据与工具</span>
+            <b>Elastic / SIEM</b>
+            <b>Docs / Knowledge Base</b>
+            <b>APIs / MCP</b>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-column highlight">
+            <span>知识与推理</span>
+            <b>NewRAG</b>
+            <b>NewChat</b>
+            <b>Evidence Graph</b>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-column">
+            <span>行动与留痕</span>
+            <b>NewFlow</b>
+            <b>Reports</b>
+            <b>Notifications</b>
+          </div>
+        </div>
+      </section>
+
+      <section id="access" class="section access">
+        <div class="section-heading">
+          <p class="eyebrow">Access panel</p>
+          <h2>产品入口已就绪，可直接进入各业务模块。</h2>
+          <p>通过下方卡片进入 NewChat、NewRAG 和 NewFlow。后续切换正式域名时，仅需替换入口链接。</p>
+        </div>
+        <div class="access-grid">
+          <article class="access-card">
+            <a class="launch-dot" href="http://204.168.178.42:23000/" target="_blank" rel="noreferrer" aria-label="Open NewChat">↗</a>
+            <span>Investigation</span>
+            <strong>NewChat</strong>
+            <small>调查工作台</small>
+          </article>
+          <article class="access-card">
+            <a class="launch-dot" href="http://204.168.178.42:3000/" target="_blank" rel="noreferrer" aria-label="Open NewRAG">↗</a>
+            <span>Knowledge</span>
+            <strong>NewRAG</strong>
+            <small>知识检索与 RAG</small>
+          </article>
+          <article class="access-card">
+            <a class="launch-dot" href="http://204.168.178.42:5677/" target="_blank" rel="noreferrer" aria-label="Open NewFlow">↗</a>
+            <span>Automation</span>
+            <strong>NewFlow</strong>
+            <small>自动化工作台</small>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>NewMind AI</span>
+      <span>NewChat · NewRAG · NewFlow</span>
+    </footer>
+  </body>
+</html>

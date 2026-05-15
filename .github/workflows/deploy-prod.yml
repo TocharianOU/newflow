@@ -21,6 +21,7 @@ jobs:
       DEPLOY_SSH_PORT: ${{ vars.DEPLOY_SSH_PORT || '22' }}
       DEPLOY_DIR: /opt/newflow/prod
       NEWFLOW_PORT: ${{ vars.NEWFLOW_PORT || '5677' }}
+      NEWMIND_WEB_HOST_PORT: ${{ vars.NEWMIND_WEB_HOST_PORT || '80' }}
       DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
       CUSTOM_AI_API_KEY: ${{ secrets.CUSTOM_AI_API_KEY }}
 
@@ -68,13 +69,15 @@ jobs:
       - name: Prepare deployment files
         run: |
           set -euo pipefail
-          ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "rm -rf '$DEPLOY_DIR/app' && mkdir -p '$DEPLOY_DIR/app'"
+          ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "rm -rf '$DEPLOY_DIR/app' '$DEPLOY_DIR/web' && mkdir -p '$DEPLOY_DIR/app' '$DEPLOY_DIR/web'"
 
           tar -czf - compiled docker | ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "tar -xzf - -C '$DEPLOY_DIR/app'"
+          tar -C NewMindAI-web -czf - . | ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "tar -xzf - -C '$DEPLOY_DIR/web'"
 
           ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" "cat > '$DEPLOY_DIR/.env'" <<ENVFILE
           NEWFLOW_PORT=$NEWFLOW_PORT
           NEWFLOW_HOST_PORT=$NEWFLOW_PORT
+          NEWMIND_WEB_HOST_PORT=$NEWMIND_WEB_HOST_PORT
           NEWFLOW_PROTOCOL=http
           NEWFLOW_SECURE_COOKIE=false
           NODE_ENV=production
@@ -118,6 +121,25 @@ jobs:
                 retries: 3
                 start_period: 40s
 
+            newmindai-web:
+              build:
+                context: ./web
+              image: newmindai-web:prod
+              container_name: newmindai-web
+              restart: unless-stopped
+              environment:
+                NODE_ENV: production
+                HOST: "0.0.0.0"
+                PORT: "8080"
+              ports:
+                - "${NEWMIND_WEB_HOST_PORT:-80}:8080"
+              healthcheck:
+                test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/"]
+                interval: 30s
+                timeout: 10s
+                retries: 3
+                start_period: 10s
+
           volumes:
             newflow_data:
               driver: local
@@ -129,7 +151,7 @@ jobs:
           ssh -p "$DEPLOY_SSH_PORT" -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" <<REMOTE
           set -euo pipefail
           cd "$DEPLOY_DIR"
-          docker compose build --pull newflow
+          docker compose build --pull newflow newmindai-web
           docker compose up -d --remove-orphans
           docker image prune -f
           docker compose ps

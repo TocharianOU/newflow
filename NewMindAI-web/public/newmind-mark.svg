@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="NewMind AI mark">
+  <defs>
+    <linearGradient id="g" x1="12" x2="84" y1="14" y2="82" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#74d4ff"/>
+      <stop offset=".48" stop-color="#8067ff"/>
+      <stop offset="1" stop-color="#43f0b5"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="28" fill="#090d1f"/>
+  <path d="M25 68V28h8.7l28.6 40H53L33.7 41.4V68H25Z" fill="url(#g)"/>
+  <path d="M63 28h8v40h-8V28Z" fill="#e8f3ff"/>
+  <circle cx="67" cy="21" r="5" fill="#43f0b5"/>
+  <path d="M24 75h48" stroke="#74d4ff" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+</svg>
